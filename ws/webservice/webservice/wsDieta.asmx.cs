@@ -22,7 +22,7 @@ namespace webservice
         static string cadenaconexion = "Data Source=dietauh.database.windows.net;Initial Catalog=dietauh;Persist Security Info=True;User ID=cachacox;Password=cvjgut7tsg!";
         SqlConnection conexion = new SqlConnection(cadenaconexion);
         [WebMethod]
-        public DataSet consultaUsuario(int id) 
+        public DataSet consultaUsuario(string id) 
         {
             DataSet tabla = new DataSet();
             SqlCommand comando = new SqlCommand();
@@ -31,8 +31,8 @@ namespace webservice
                 conexion.Open();
                 comando.Connection = conexion;
                 comando.CommandType = CommandType.Text;
-                comando.CommandText = "select * from usuarios where iduser = @iduser";
-                comando.Parameters.Add("@iduser", SqlDbType.Int).Value = id;
+                comando.CommandText = "select * from usuarios where correo = @iduser";
+                comando.Parameters.Add("@iduser", SqlDbType.NVarChar).Value = id;
                 SqlDataAdapter adapto = new SqlDataAdapter();
                 adapto.SelectCommand = comando;
                 adapto.Fill(tabla);
@@ -125,6 +125,132 @@ namespace webservice
                 conexion.Close();
                 throw new Exception("Error al insertar Usuario" + ex.Message);
             }
+        }
+
+        [WebMethod]
+        public double calculoIMC(int peso, int altura)
+        {
+            double indice = 0.0;
+            double alturadouble = altura;
+            alturadouble = alturadouble / 100;
+
+            if (peso > 0 || altura > 0)
+            {
+                indice = Math.Round(((peso) / (Math.Pow(alturadouble, 2))), 2);
+            }
+            return indice;
+        }
+
+        [WebMethod]
+        public double calculoTMB(int sexo, int altura, int peso, int frecuencia, int edad, int kxp)
+        {
+            double tmb = 0;
+            int calNec = frecuencia;
+            double multip = 0.0;
+            int kg = 0;
+
+            switch (calNec)
+            {
+                case 1:
+                    multip = 1.2;
+                    break;
+                case 2:
+                    multip = 1.375;
+                    break;
+                case 3:
+                    multip = 1.55;
+                    break;
+                case 4:
+                    multip = 1.725;
+                    break;
+                case 5:
+                    multip = 1.9;
+                    break;
+            }
+
+            switch (kxp)
+            {
+                case 1:
+                    kg = 1000;
+                    break;
+                case 2:
+                    kg = 500;
+                    break;
+            }
+
+            if (sexo == 1)   //hombre
+            {
+                tmb = ((10 * peso) + (6.25 * altura) - (5 * edad) + (5));
+                tmb = (tmb * multip) - kg;
+            }
+            else if (sexo == 2)  //mujer
+            {
+                tmb = ((10 * peso) + (6.25 * altura) - (5 * edad) - (161));
+                tmb = (tmb * multip) - kg;
+            }
+            return tmb;
+        }
+
+        [WebMethod]
+        public double calculoIdeal(int altura, int sexo)
+        {
+            double pesoideal = 0;
+            if (sexo == 1)
+            {
+                pesoideal = (altura - 100) * (0.90);
+            }
+            else if (sexo == 2)
+            {
+                pesoideal = (altura - 100) * (0.85);
+            }
+            return pesoideal;
+        }
+
+        [WebMethod]
+        public string calculoCompCorporal(double imc)
+        {
+            string compCorp = "";
+            if (imc < 18.5)
+            {
+                compCorp = "Peso inferior al normal";
+            }
+            else if (imc >= 18.5 && imc <= 24.9)
+            {
+                compCorp = "Peso normal";
+            }
+            else if (imc >= 25.0 && imc <= 29.9)
+            {
+                compCorp = "Peso superior al normal";
+            }
+            else if (imc > 30.0)
+            {
+                compCorp = "Obesidad";
+            }
+            return compCorp;
+        }
+
+        [WebMethod]
+
+        public int calculoDieta_plan(double tmb_dieta)
+        {
+            int plan = 0;
+            if (tmb_dieta < 1200)
+            {
+                plan = 1;
+            }
+            else if (tmb_dieta > 1200 && tmb_dieta <= 1500)
+            {
+                plan = 2;
+            }
+            else if (tmb_dieta > 1500 && tmb_dieta <= 1800)
+            {
+                plan = 3;
+            }
+            else if (tmb_dieta > 1800)
+            {
+                plan = 4;
+            }
+            return plan;
         }
     }
 }
